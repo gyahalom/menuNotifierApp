@@ -11,6 +11,7 @@ from flask import (
 )
 from flask.logging import default_handler
 from flask_apscheduler import APScheduler
+from flask_apscheduler.utils import CronTrigger
 from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm
 from http_logging.handler import AsyncHttpHandler
@@ -43,6 +44,7 @@ from .twilio import (
 )
 
 APP_NAME = 'Menu Notifier'
+CRONTAB = os.getenv('MENU_NOTIFIER_CRON', '0 19 * * 0-3,6')
 
 transport_class = TwilioHttpTransport(
 	logger_name=APP_NAME,
@@ -121,7 +123,7 @@ def create_app(test_config=None):
 			os.makedirs(app.instance_path)
 		except OSError:
 			app.logger.exception('Failed to create instance folder')
-			
+
 	# Add email logging handler
 	app.logger.addHandler(twilio_handler)
 	rot_handler = TimedRotatingFileHandler(
@@ -179,10 +181,8 @@ def create_app(test_config=None):
 	scheduler = APScheduler()
 	scheduler.init_app(app)	
 	@scheduler.task(
-		'cron',
-		id='send_sms',
-		day_of_week='0-3,6',
-		hour='19',
+		CronTrigger.from_crontab(CRONTAB),
+		id='send_sms',		
 	)
 	def sens_sms():
 		"""
