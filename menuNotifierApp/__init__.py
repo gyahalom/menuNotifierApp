@@ -115,6 +115,13 @@ def create_app(test_config=None):
 		# load the test config if passed in
 		app.config.from_mapping(test_config)
 
+	# ensure the instance folder exists
+	if not os.path.isdir(app.instance_path):
+		try:
+			os.makedirs(app.instance_path)
+		except OSError:
+			app.logger.exception('Failed to create instance folder')
+			
 	# Add email logging handler
 	app.logger.addHandler(twilio_handler)
 	rot_handler = TimedRotatingFileHandler(
@@ -126,12 +133,6 @@ def create_app(test_config=None):
 	rot_handler.setFormatter(formatter)
 	app.logger.addHandler(rot_handler)
 
-	# ensure the instance folder exists
-	if not os.path.isdir(app.instance_path):
-		try:
-			os.makedirs(app.instance_path)
-		except OSError:
-			app.logger.exception('Failed to create instance folder')
 
 	bootstrap = Bootstrap5()
 	bootstrap.init_app(app)
