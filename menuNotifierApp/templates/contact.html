@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block header %}
+  <h1 class="col-lg-4 offset-lg-4 text-center">{% block title %}Contact Us{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="col-lg-4 offset-lg-4 text-center">
+	<p class="text-center w-responsive mx-auto mb-5">Do you have any questions? Please do not hesitate to contact me directly. I'll get back to you ASAP</p>
+	<div class="row">
+		{{ render_form(form, form_type='horizontal') }}
+	</div>
+</div>
+{% endblock %}

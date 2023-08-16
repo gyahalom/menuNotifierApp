@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block header %}
+  <h1 class="col-lg-4 offset-lg-4 text-center">{% block title %}Verify Number{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+	<div class="col-lg-4 offset-lg-4 text-center">
+		<p>
+			A text message has been sent to phone ending in {{ phone }}. 
+			<br>Enter the 6 digit code below.
+			<br>Didn't get it? try to <a href="javascript:window.location.href=window.location.href">send code again</a>
+		</p>
+	</div>
+  <div class="col-lg-4 offset-lg-4">
+		{{ render_form(form, form_type='horizontal') }}
+  </div>
+{% endblock %}

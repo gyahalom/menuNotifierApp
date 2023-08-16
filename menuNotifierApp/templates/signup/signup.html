@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block header %}
+  <h1 class="col-lg-4 offset-lg-4 text-center">{% block title %}Sign Up{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="col-lg-4 offset-lg-4 text-center">
+    <p>
+      Sign up to receive daily notifications on menu options at McAuliffe 
+      elementary for the 2023-24 school year.
+    </p>
+    <p>
+      Example text:
+      <img src="{{ url_for('static', filename='images/sample_text.png') }}" class="img-responsive w-100" />
+    </p>
+  </div>
+  <div class="col-lg-4 offset-lg-4">
+    {{ render_form(form, form_type='horizontal') }}
+  </div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block header %}
+  <h1 class="col-lg-4 offset-lg-4 text-center text-success">{% block title %}Success!{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="col-lg-4 offset-lg-4 text-center">
+	<p>
+		You have successfully registered to Menu Notifier, you will recieve daily 
+		menu updates at 7pm PST Sun-Thu.		 
+	</p>
+	<p>
+		To opt out at any time text back <strong>STOP</strong>, to resume notifications
+		simply text <strong>RESUME</strong>.		
+	</p>
+	<p>
+		I hope you enjoy this little app, and if so, consider treating me to a cup 
+		of coffee.
+		<form action="https://www.paypal.com/donate" method="post" target="_top">
+			<input type="hidden" name="business" value="BGRJHJXHRJJCQ" />
+			<input type="hidden" name="no_recurring" value="0" />
+			<input type="hidden" name="currency_code" value="USD" />
+			<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
+		</form> 
+	</p>
+</div>
+{% endblock %}

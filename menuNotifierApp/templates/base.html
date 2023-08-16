@@ -1,0 +1,60 @@
+{% from 'bootstrap5/nav.html' import render_nav_item %}
+{% from 'bootstrap5/utils.html' import render_messages %}
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  {% block styles %}
+    <!-- Bootstrap CSS -->
+    {{ bootstrap.load_css() }}
+  {% endblock %}
+
+  <title>{% block title %}{% endblock %} - CUSD Menu Notifier</title>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">CUSD Menu Notifier</a>
+    </div>
+  </nav>
+  <main class="container">
+    <header>
+      {% block header %}{% endblock %}
+    </header>
+
+    {{ render_messages(container=False, dismissible=True, dismiss_animate=True) }}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-light text-lg-start text-muted text-center mt-3">
+    {% block footer %}
+    <div class="text-center">
+      <form class="pt-3" action="https://www.paypal.com/donate" method="post" target="_top">
+        <input type="hidden" name="business" value="BGRJHJXHRJJCQ" />
+        <input type="hidden" name="no_recurring" value="0" />
+        <input type="hidden" name="currency_code" value="USD" />
+        <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+        <!-- <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /> -->
+      </form>   
+    </div>    
+    <div class="text-center">
+      <ul class="list-inline">
+        <li class="list-inline-item"><a class="text-reset" href="{{ url_for('policies.terms') }}">Terms and Conditions</a></li>
+        <li class="list-inline-item"><a class="text-reset" href="{{ url_for('policies.privacy') }}">Privacy Policy</a></li>
+        <li class="list-inline-item"><a class="text-reset" href="{{ url_for('contact') }}">Contact Us</a></li>
+      </ul>
+    </div>	
+    <div class="text-center">
+      <small> &copy; 2023 <strong>Yahalom Software</strong></small>
+    </div>
+    {% endblock %}
+  </footer> 
+
+  {% block scripts %}
+    {{ bootstrap.load_js() }}
+  {% endblock %}
+</body>
+</html>
