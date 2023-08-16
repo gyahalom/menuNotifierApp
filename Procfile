@@ -1,1 +1,1 @@
-web: gunicorn menuNotifierApp:app --workers=1
+web: gunicorn 'menuNotifierApp:create_app()' --workers=1
