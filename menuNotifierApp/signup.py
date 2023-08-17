@@ -61,7 +61,7 @@ def signup():
 	if form.validate_on_submit():
 		username = form.username.data
 		phone = form.phone.data
-		app.logger.info('User trying to sign up')
+		app.logger.info(f'User {username} trying to sign up with phone {phone}')
 		error = None
 
 		if not form.terms.data:
@@ -171,6 +171,6 @@ def verify():
 	if error is not None:
 		app.logger.info(f'User encountered error: {error}')
 		flash(error, 'error')
-		
+
 	return render_template('signup/verify.html', form=form, phone=phone[-4:])
 	

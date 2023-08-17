@@ -135,7 +135,6 @@ def create_app(test_config=None):
 	rot_handler.setFormatter(formatter)
 	app.logger.addHandler(rot_handler)
 
-
 	bootstrap = Bootstrap5()
 	bootstrap.init_app(app)
 
@@ -157,7 +156,7 @@ def create_app(test_config=None):
 		form = ContactForm()
 		error = None
 		if form.validate_on_submit():
-			app.logger.info('Sending message')			
+			app.logger.info('Sending contact email')			
 			mail = Mail(
 				from_email=From(SENDGRID_FROM_EMAIL, APP_NAME),
 				to_emails=To(SENDGRID_TO_EMAIL),
@@ -190,6 +189,7 @@ def create_app(test_config=None):
 		"""
 		try:
 			with app.app_context():
+				app.logger.info('Sending messages')
 				send_messages()
 		except:
 			app.logger.exception('Failed to send messages')
