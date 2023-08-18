@@ -11,10 +11,24 @@ from flask import (
 from flask import current_app as app
 from flask_wtf import FlaskForm
 import re
-from wtforms.validators import DataRequired, Regexp, AnyOf
-from wtforms.fields import BooleanField, StringField, SubmitField, TelField, Label
+from wtforms.validators import (
+  DataRequired, 
+  Regexp, 
+  AnyOf
+)
+from wtforms.fields import (
+  BooleanField, 
+  StringField, 
+	SubmitField, 
+  TelField, 
+  Label
+)
 from .db import get_db
-from .twilio import client, VERIFY_SID
+from .twilio import (
+  send_email, 
+  verify_send, 
+  verify_check,
+)
 
 bp = Blueprint('signup', __name__, url_prefix='/signup')
 PHONE_PAT = '^\s*(?:\+1)?\s*\(?(\d{3})\)?\s*(\d{3})\s*-?\s*(\d{4})\s*$'
@@ -106,11 +120,7 @@ def verify():
 		if request.method == 'GET':
 			try:
 				app.logger.info(f'Sending verification code to {phone}')
-				client.verify \
-							.v2 \
-							.services(VERIFY_SID) \
-							.verifications \
-							.create(to=phone, channel='sms')
+				verify_send(phone)
 			except:
 				error = 'Could not send verification code'
 				app.logger.exception('Failed to send verification code')
@@ -138,16 +148,12 @@ def verify():
 				error = 'Too many attempts. Try again later'
 			else:
 				try:
-					verification_check = client.verify \
-																			.v2 \
-																			.services(VERIFY_SID) \
-																			.verification_checks \
-																			.create(to=phone, code=form.code.data)
+					check = verify_check(phone, form.code.data)
 				except:
 					error = 'Could not verify code'
 					app.logger.exception('Failed to verify code')
 				else:
-					if verification_check.status == 'approved':
+					if check:
 						app.logger.info('User successfully verified, adding to DB')
 						try:
 							db = get_db()
@@ -160,6 +166,10 @@ def verify():
 								(username, phone),
 							)
 							db.commit()		
+							send_email(
+								subject='New User Signed Up!', 
+								body=f'{username} registered with phone {phone}',
+							)
 						except db.IntegrityError:
 							error = 'Something went wrong, please try again'	
 							app.logger.exception('Failed to update DB')	

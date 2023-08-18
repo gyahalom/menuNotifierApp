@@ -14,21 +14,11 @@ from flask_apscheduler import APScheduler
 from flask_apscheduler.utils import CronTrigger
 from flask_bootstrap import Bootstrap5
 from flask_wtf import FlaskForm
-from http_logging.handler import AsyncHttpHandler
 import os
 import logging
 from logging.config import dictConfig
 from logging.handlers import TimedRotatingFileHandler
 from .menu_notifier import send_messages
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import (
-  From,
-	Mail,
-  PlainTextContent,
-	ReplyTo,
-	Subject,
-	To,
-)
 from wtforms.validators import DataRequired
 from wtforms.fields import (
   EmailField, 
@@ -37,24 +27,11 @@ from wtforms.fields import (
   TextAreaField,
 )
 from .twilio import (
-	TwilioHttpTransport,
-	SENDGRID_API_KEY,
-	SENDGRID_FROM_EMAIL,
-	SENDGRID_TO_EMAIL,
+	send_email,
+	twilio_handler,
 )
 
-APP_NAME = 'Menu Notifier'
 CRONTAB = os.getenv('MENU_NOTIFIER_CRON', '0 19 * * 0-3,6')
-
-transport_class = TwilioHttpTransport(
-	logger_name=APP_NAME,
-	sendgrid_api_key=SENDGRID_API_KEY,
-	sendgrid_sender_email=SENDGRID_FROM_EMAIL,
-	alert_email=SENDGRID_TO_EMAIL,
-)
-
-twilio_handler = AsyncHttpHandler(transport_class=transport_class)
-twilio_handler.setLevel(logging.ERROR)
 
 dictConfig({
     'version': 1,
@@ -125,6 +102,7 @@ def create_app(test_config=None):
 			app.logger.exception('Failed to create instance folder')
 
 	# Add email logging handler
+	twilio_handler.setLevel(logging.ERROR)
 	app.logger.addHandler(twilio_handler)
 	rot_handler = TimedRotatingFileHandler(
 		os.path.join(app.instance_path, 'menuNotifier.log'), 
@@ -156,16 +134,13 @@ def create_app(test_config=None):
 		form = ContactForm()
 		error = None
 		if form.validate_on_submit():
-			app.logger.info('Sending contact email')			
-			mail = Mail(
-				from_email=From(SENDGRID_FROM_EMAIL, APP_NAME),
-				to_emails=To(SENDGRID_TO_EMAIL),
-				subject=Subject(f'[{APP_NAME}][User Contact] {form.subject.data}'),
-				plain_text_content=PlainTextContent(form.message.data))
-			mail.reply_to = ReplyTo(form.email.data, form.name.data)
 			try:
-				sg = SendGridAPIClient()
-				sg.send(mail)
+				app.logger.info('Sending contact email')	
+				send_email(
+					subject=f'[User Contact] {form.subject.data}', 
+					body=form.message.data,
+					reply_to=(form.email.data, form.name.data)
+				)
 				form = ContactForm(formdata=None)
 				flash('Message sent!', 'success')
 			except:

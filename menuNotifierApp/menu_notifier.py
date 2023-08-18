@@ -3,7 +3,7 @@ import os
 import requests
 from typing import Iterable, Optional
 from .db import get_db
-from .twilio import client, SERVICE_ID
+from .twilio import send_text
 
 MENU_ID = {
 	'BREAKFAST': {
@@ -134,9 +134,5 @@ def send_messages(date: datetime=None):
 
 		for person in users:
 			msg[0] = f"\n{greet()} {person['username']},"
-			client.messages.create(  
-															messaging_service_sid=SERVICE_ID, 
-															body='\n'.join(msg),      
-															to=person['phone'] 
-														) 
+			send_text(phone=person['phone'], body='\n'.join(msg))
 	
