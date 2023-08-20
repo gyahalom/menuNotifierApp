@@ -34,9 +34,9 @@ bp = Blueprint('signup', __name__, url_prefix='/signup')
 PHONE_PAT = '^\s*(?:\+1)?\s*\(?(\d{3})\)?\s*(\d{3})\s*-?\s*(\d{4})\s*$'
 
 class PhoneForm(FlaskForm):
-	username = StringField('Name', render_kw={'autocomplete': 'given-name',
-					   							'placeholder': 'Name used in messages'}, 
-													validators=[DataRequired()])
+	name = StringField('Name', render_kw={'autocomplete': 'given-name',
+											'placeholder': 'Name used in messages'}, 
+											validators=[DataRequired()])
 	phone = TelField('Phone', render_kw={'autocomplete': 'tel-national', 
 				      			'placeholder': 'Your phone number'}, 
 		  							validators=[DataRequired(), Regexp(PHONE_PAT, 
@@ -76,14 +76,14 @@ def signup():
 		f'<a href="{ url_for("policies.privacy") }"> Privacy policy</a>'
 	))
 	if form.validate_on_submit():
-		username = form.username.data
+		name = form.name.data
 		phone = form.phone.data
-		app.logger.info(f'User {username} trying to sign up with phone {phone}')
+		app.logger.info(f'User {name} trying to sign up with phone {phone}')
 		error = None
 
 		if not form.terms.data:
 			error = 'Must agree to terms'
-		elif not username:
+		elif not name:
 			error = 'Name is required'
 		elif not phone:
 			error = 'Phone is required'
@@ -98,7 +98,7 @@ def signup():
 
 		if error is None:
 			session.clear()
-			session['username'] = username
+			session['name'] = name
 			session['phone'] = phone
 			return redirect(url_for("signup.verify"))
 		else:
@@ -109,9 +109,9 @@ def signup():
 
 @bp.route('/verify', methods=('GET', 'POST'))
 def verify():
-	if 'phone' not in session or 'username' not in session:
+	if 'phone' not in session or 'name' not in session:
 		return redirect(url_for('signup.signup'))
-	username = session['username']
+	name = session['name']
 	phone = session['phone']
 	form = VerifyForm()
 	error = None
@@ -166,12 +166,12 @@ def verify():
 								)
 							db.execute(
 								'INSERT INTO user (username, phone) VALUES (?, ?)',
-								(username, phone),
+								(name, phone),
 							)
 							db.commit()		
 							send_email(
 								subject='New User Signed Up!', 
-								body=f'{username} registered with phone {phone}',
+								body=f'{name} registered with phone {phone}',
 							)
 						except db.IntegrityError:
 							error = 'Something went wrong, please try again'	
