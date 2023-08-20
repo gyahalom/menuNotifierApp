@@ -69,9 +69,11 @@ default_handler.setFormatter(formatter)
 load_dotenv()
 
 class ContactForm(FlaskForm):
-	name = StringField('Name', render_kw={'placeholder': 'Your name'}, 
+	name = StringField('Name', render_kw={'autocomplete': 'given-name', 
+				       				'placeholder': 'Your name'}, 
 											validators=[DataRequired()])
-	email = EmailField('Email', render_kw={'placeholder': 'Your email address'}, 
+	email = EmailField('Email', render_kw={'autocomplete': 'email',
+											'placeholder': 'Your email address'}, 
 		  								validators=[DataRequired()])
 	subject = StringField('Subject', render_kw={'placeholder': 'What''s it about'}, 
 												validators=[DataRequired()])

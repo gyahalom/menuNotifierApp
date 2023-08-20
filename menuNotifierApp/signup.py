@@ -34,9 +34,11 @@ bp = Blueprint('signup', __name__, url_prefix='/signup')
 PHONE_PAT = '^\s*(?:\+1)?\s*\(?(\d{3})\)?\s*(\d{3})\s*-?\s*(\d{4})\s*$'
 
 class PhoneForm(FlaskForm):
-	username = StringField('Name', render_kw={'placeholder': 'Name used in messages'}, 
+	username = StringField('Name', render_kw={'autocomplete': 'given-name',
+					   							'placeholder': 'Name used in messages'}, 
 													validators=[DataRequired()])
-	phone = TelField('Phone', render_kw={'placeholder': 'Your phone number'}, 
+	phone = TelField('Phone', render_kw={'autocomplete': 'tel-national', 
+				      			'placeholder': 'Your phone number'}, 
 		  							validators=[DataRequired(), Regexp(PHONE_PAT, 
 										message='Incorrect phone format, should be (xxx) yyy-zzzz')])
 	terms = BooleanField(default=False, validators=[AnyOf([True], 
@@ -44,8 +46,9 @@ class PhoneForm(FlaskForm):
 	submit = SubmitField()
 
 class VerifyForm(FlaskForm):
-	code = StringField('Code', validators=[DataRequired(), Regexp('^\d{6}$', 
-							       message="Code should be 6 digits")])
+	code = StringField('Code', render_kw={'autocomplete': 'one-time-code'}, 
+		    							validators=[DataRequired(), Regexp('^\d{6}$', 
+							       	message="Code should be 6 digits")])
 	submit = SubmitField('Verify')
 
 def phone_exists(phone):
