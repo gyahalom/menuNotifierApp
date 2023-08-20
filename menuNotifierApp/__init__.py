@@ -171,6 +171,7 @@ def create_app(test_config=None):
 		except:
 			app.logger.exception('Failed to send messages')
 
+	app.logger.info('Starting scheduler')
 	scheduler.start()
 	@atexit.register
 	def close_scheduler():
