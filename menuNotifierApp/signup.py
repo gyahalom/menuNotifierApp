@@ -94,7 +94,7 @@ def signup():
 		else:
 			phone = '+1' + ''.join(phone.groups())
 			if phone_exists(phone):
-				error = 'Phone number is already registered.'
+				return render_template('signup/success.html')
 
 		if error is None:
 			session.clear()
@@ -116,7 +116,7 @@ def verify():
 	form = VerifyForm()
 	error = None
 	if phone_exists(phone):
-		error = 'Phone already registered';
+		return render_template('signup/success.html')
 	if (retries := get_retries(phone)) > 5:
 		error = 'There was an issue sending code'
 	if error is None:		
