@@ -172,8 +172,16 @@ def create_app(test_config=None):
 		except:
 			app.logger.exception('Failed to send messages')
 
+	app.logger.info('Starting scheduler')
+	scheduler.start()
+	@atexit.register
+	def close_scheduler():
+		if scheduler.running:
+			app.logger.info('Shutting down the scheduler')
+			scheduler.shutdown()
+
 	@click.command('send-sms')
-	def manual_send():
+	def send_sms_command():
 		"""
 		Send notifications manually
 		"""
@@ -185,13 +193,7 @@ def create_app(test_config=None):
 		except:
 			app.logger.exception('Failed to send messages')
 
-	app.logger.info('Starting scheduler')
-	scheduler.start()
-	@atexit.register
-	def close_scheduler():
-		if scheduler.running:
-			app.logger.info('Shutting down the scheduler')
-			scheduler.shutdown()
+	app.cli.add_command(send_sms_command)
 
 	@app.errorhandler(404)
 	def page_not_found(e):
