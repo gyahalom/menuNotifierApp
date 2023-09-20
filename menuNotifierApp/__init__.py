@@ -1,4 +1,5 @@
 import atexit
+import click
 from dotenv import load_dotenv
 from flask import (
   has_request_context, 
@@ -168,6 +169,19 @@ def create_app(test_config=None):
 			with app.app_context():
 				app.logger.info('Sending messages')
 				send_messages()
+		except:
+			app.logger.exception('Failed to send messages')
+
+	@click.command('send-sms')
+	def manual_send():
+		"""
+		Send notifications manually
+		"""
+		try:
+			with app.app_context():
+				app.logger.info('Sending messages manually')
+				send_messages()
+				click.echo('Messages sent')
 		except:
 			app.logger.exception('Failed to send messages')
 
