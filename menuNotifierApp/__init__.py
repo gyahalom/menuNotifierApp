@@ -160,7 +160,7 @@ def create_app(test_config=None):
 	@scheduler.task(
 		CronTrigger.from_crontab(CRONTAB),
 		id='send_sms',	
-		misfire_grace_time=900,	
+		misfire_grace_time=4500,	
 	)
 	def sens_sms():
 		"""
