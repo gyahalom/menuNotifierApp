@@ -10,6 +10,7 @@ from flask import (
 )
 from flask import current_app as app
 from flask_wtf import FlaskForm
+import os
 import re
 from wtforms.validators import (
   DataRequired, 
@@ -32,6 +33,7 @@ from .twilio import (
 
 bp = Blueprint('signup', __name__, url_prefix='/signup')
 PHONE_PAT = '^\s*(?:\+1)?\s*\(?(\d{3})\)?\s*(\d{3})\s*-?\s*(\d{4})\s*$'
+SUMMER = os.getenv('MENU_NOTIFIER_SUMMER')
 
 class PhoneForm(FlaskForm):
 	name = StringField('Name', render_kw={'autocomplete': 'given-name',
@@ -69,6 +71,8 @@ def get_retries(phone):
 
 @bp.route('/', methods=('GET', 'POST'))
 def signup():
+	if SUMMER:
+		return render_template('summer.html')	
 	form = PhoneForm()
 	form.terms.label = Label(form.terms.id, Markup(
 		'By signing up you agree to the '
