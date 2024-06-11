@@ -128,13 +128,15 @@ def send_messages(date: datetime=None, msg=None):
 				msg.append('')
 		if msg:		
 			msg = [f'{SCHOOL} meal options for {date_str}', ''] + msg + ['Have a nice day!']
-	elif os.path.isfile(msg):
-		with open(msg) as f:
-			msg = f.read().splitlines()		
 	elif isinstance(msg, str):
-		msg = msg.splitlines()
+		if os.path.isfile(msg):
+			with open(msg) as f:
+				msg = f.read().splitlines()
+		else:
+			msg = msg.splitlines()
 
-	if msg:		
+	if msg:	
+		msg = list(msg)	
 		db = get_db()
 		users = db.execute('SELECT * FROM user').fetchall()
 		msg.insert(0, '')
