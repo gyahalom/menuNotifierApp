@@ -182,14 +182,19 @@ def create_app(test_config=None):
 			scheduler.shutdown()
 
 	@click.command('send-sms')
-	def send_sms_command():
+	@click.argument('msg', nargs=-1)	
+	def send_sms_command(msg=None):
 		"""
 		Send notifications manually
 		"""
+		if len(msg) == 0:
+			msg = None
+		elif len(msg) == 1:
+			msg = msg[0]
 		try:
 			with app.app_context():
 				app.logger.info('Sending messages manually')
-				send_messages()
+				send_messages(msg=msg)
 				click.echo('Messages sent')
 		except:
 			app.logger.exception('Failed to send messages')
