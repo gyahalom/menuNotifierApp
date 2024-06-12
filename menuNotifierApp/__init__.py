@@ -33,6 +33,7 @@ from .twilio import (
 )
 
 CRONTAB = os.getenv('MENU_NOTIFIER_CRON', '0 19 * * 0-3,6')
+SCHEDULER = os.getenv('MENU_NOTIFIER_SCHEDULER')
 
 dictConfig({
     'version': 1,
@@ -155,31 +156,32 @@ def create_app(test_config=None):
 		
 		return render_template('contact.html', form=form)
 
-	scheduler = APScheduler()
-	scheduler.init_app(app)	
-	@scheduler.task(
-		CronTrigger.from_crontab(CRONTAB),
-		id='send_sms',	
-		misfire_grace_time=4500,	
-	)
-	def sens_sms():
-		"""
-		Send notifications Weekdays at 7pm
-		"""
-		try:
-			with app.app_context():
-				app.logger.info('Sending messages')
-				send_messages()
-		except:
-			app.logger.exception('Failed to send messages')
+	if SCHEDULER:
+		scheduler = APScheduler()
+		scheduler.init_app(app)	
+		@scheduler.task(
+			CronTrigger.from_crontab(CRONTAB),
+			id='send_sms',	
+			misfire_grace_time=4500,	
+		)
+		def sens_sms():
+			"""
+			Send notifications Weekdays at 7pm
+			"""
+			try:
+				with app.app_context():
+					app.logger.info('Sending messages')
+					send_messages()
+			except:
+				app.logger.exception('Failed to send messages')
 
-	app.logger.info('Starting scheduler')
-	scheduler.start()
-	@atexit.register
-	def close_scheduler():
-		if scheduler.running:
-			app.logger.info('Shutting down the scheduler')
-			scheduler.shutdown()
+		app.logger.info(f'Starting scheduler with crontab "{CRONTAB}"')
+		scheduler.start()
+		@atexit.register
+		def close_scheduler():
+			if scheduler.running:
+				app.logger.info('Shutting down the scheduler')
+				scheduler.shutdown()
 
 	@click.command('send-sms')
 	@click.argument('msg', nargs=-1)	
