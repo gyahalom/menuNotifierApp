@@ -1,5 +1,6 @@
 import atexit
 import click
+from datetime import datetime
 from dotenv import load_dotenv
 from flask import (
   has_request_context, 
@@ -34,6 +35,7 @@ from .twilio import (
 
 CRONTAB = os.getenv('MENU_NOTIFIER_CRON', '0 19 * * 0-3,6')
 SCHEDULER = os.getenv('MENU_NOTIFIER_SCHEDULER')
+SCHOOL_START = os.getenv('MENU_NOTIFIER_START', str(datetime.now().date()))
 
 dictConfig({
     'version': 1,
@@ -169,9 +171,13 @@ def create_app(test_config=None):
 			Send notifications Weekdays at 7pm
 			"""
 			try:
-				with app.app_context():
-					app.logger.info('Sending messages')
-					send_messages()
+				today = datetime.now().date()
+				if today >= datetime.strptime(SCHOOL_START, '%Y-%m-%d').date():					
+					with app.app_context():
+						app.logger.info('Sending messages')
+						send_messages()
+				else:
+					app.logger.info('School hasn''t started yet, skipping messages')
 			except:
 				app.logger.exception('Failed to send messages')
 
