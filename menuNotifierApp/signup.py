@@ -173,10 +173,13 @@ def verify():
 								(name, phone),
 							)
 							db.commit()		
-							send_email(
-								subject='New User Signed Up!', 
-								body=f'{name} registered with phone {phone}',
-							)
+							try:
+								send_email(
+									subject='New User Signed Up!', 
+									body=f'{name} registered with phone {phone}',
+								)
+							except Exception:
+								app.logger.exception('Failed to send email')
 						except db.IntegrityError:
 							error = 'Something went wrong, please try again'	
 							app.logger.exception('Failed to update DB')	
