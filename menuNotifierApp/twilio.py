@@ -1,15 +1,7 @@
 from http_logging.handler import AsyncHttpHandler
 from http_logging.transport import AsyncHttpTransport
 import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import (
-  From,
-	Mail,
-  HtmlContent,
-	ReplyTo,
-	Subject,
-	To,
-)
+from mailersend import MailerSendClient, EmailBuilder, EmailContact
 from twilio.rest import Client
 from typing import Optional, List
 
@@ -18,21 +10,23 @@ ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 SERVICE_ID = os.getenv('TWILIO_SERVICE_ID')
 VERIFY_SID = os.getenv('TWILIO_VERIFY_SID')		
-SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
-SENDGRID_FROM_EMAIL = os.getenv('SENDGRID_FROM_EMAIL')
-SENDGRID_TO_EMAIL = os.getenv('SENDGRID_TO_EMAIL')
+MAILERSEND_FROM_EMAIL = os.getenv('MAILERSEND_FROM_EMAIL')
+MAILERSEND_TO_EMAIL = os.getenv('MAILERSEND_TO_EMAIL')
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 def send_email(subject: str, body: str, reply_to: Optional[tuple[str]]=None) -> None:
-	mail = Mail(
-		from_email=From(SENDGRID_FROM_EMAIL, APP_NAME),
-		to_emails=To(SENDGRID_TO_EMAIL),
-		subject=Subject(f'[{APP_NAME}] {subject}'),
-		html_content=HtmlContent(body))
+	email = (EmailBuilder()
+		.from_email(MAILERSEND_FROM_EMAIL, APP_NAME)
+		.to(MAILERSEND_TO_EMAIL)
+		.subject(f'[{APP_NAME}] {subject}')
+		.html(body)
+		.build())
+	
 	if reply_to is not None:
-		mail.reply_to = ReplyTo(*reply_to)
-	sg = SendGridAPIClient()
-	sg.send(mail)
+		email.reply_to = EmailContact(email=reply_to[0], name=reply_to[1])
+	
+	ms = MailerSendClient()
+	ms.emails.send(email)
 
 def send_text(phone: str, body: str) -> None:
 	client.messages.create(  
@@ -65,10 +59,8 @@ class TwilioHttpTransport(AsyncHttpTransport):
 			twilio_account_sid: Optional[str] = None,
 			twilio_auth_token: Optional[str] = None,
 			twilio_sender_number: Optional[str] = None,
-			sendgrid_sender_email: Optional[str] = None,
-			sendgrid_api_key: Optional[str] = None,
 			alert_phone: Optional[str] = None,
-			alert_email: Optional[List[str]] = None,
+			alert_email: bool=False,
 			*args,
 			**kwargs,
 	) -> None:
@@ -78,9 +70,6 @@ class TwilioHttpTransport(AsyncHttpTransport):
 		self.twilio_account_sid = twilio_account_sid
 		self.twilio_auth_token = twilio_auth_token
 		self.twilio_sender_number = twilio_sender_number
-
-		self.sendgrid_sender_email = sendgrid_sender_email
-		self.sendgrid_api_key = sendgrid_api_key
 
 		self.alert_phone = alert_phone
 		self.alert_email = alert_email
@@ -121,15 +110,6 @@ class TwilioHttpTransport(AsyncHttpTransport):
 		])
 
 		send_email(subject=self.alert_context, body=msg)
-		message = Mail(
-			from_email=self.sendgrid_sender_email,
-			to_emails=self.alert_email,
-			subject=self.alert_context,
-			html_content=msg,
-		)
-
-		sg = SendGridAPIClient(self.sendgrid_api_key)
-		sg.send(message)
 
 	def build_log_html(self, log):
 		return '<br>'.join([
@@ -139,9 +119,7 @@ class TwilioHttpTransport(AsyncHttpTransport):
 	
 transport_class = TwilioHttpTransport(
 	logger_name=APP_NAME,
-	sendgrid_api_key=SENDGRID_API_KEY,
-	sendgrid_sender_email=SENDGRID_FROM_EMAIL,
-	alert_email=SENDGRID_TO_EMAIL,
+	alert_email=True,
 )
 
 twilio_handler = AsyncHttpHandler(transport_class=transport_class)
