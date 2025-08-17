@@ -1,7 +1,11 @@
 from http_logging.handler import AsyncHttpHandler
 from http_logging.transport import AsyncHttpTransport
 import os
-from mailersend import MailerSendClient, EmailBuilder, EmailContact
+from mailersend import (
+	EmailBuilder, 
+	EmailContact,
+	MailerSendClient, 
+)
 from twilio.rest import Client
 from typing import Optional, List
 

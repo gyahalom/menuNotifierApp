@@ -18,7 +18,8 @@ from wtforms.validators import (
   AnyOf
 )
 from wtforms.fields import (
-  BooleanField, 
+  BooleanField,
+	SelectField, 
   StringField, 
 	SubmitField, 
   TelField, 
@@ -43,6 +44,7 @@ class PhoneForm(FlaskForm):
 				      			'placeholder': 'Your phone number'}, 
 		  							validators=[DataRequired(), Regexp(PHONE_PAT, 
 										message='Incorrect phone format, should be (xxx) yyy-zzzz')])
+	school = SelectField('School', choices=['McAuliffe', 'CUSD'])
 	terms = BooleanField(default=False, validators=[AnyOf([True], 
 												message='You must agree to the terms to sign up')])
 	submit = SubmitField()
@@ -82,6 +84,7 @@ def signup():
 	if form.validate_on_submit():
 		name = form.name.data
 		phone = form.phone.data
+		school = form.school.data
 		app.logger.info(f'User {name} trying to sign up with phone {phone}')
 		error = None
 
@@ -104,6 +107,7 @@ def signup():
 			session.clear()
 			session['name'] = name
 			session['phone'] = phone
+			session['school'] = school
 			return redirect(url_for("signup.verify"))
 		else:
 			app.logger.info(f'User encountered error: {error}')
@@ -117,6 +121,7 @@ def verify():
 		return redirect(url_for('signup.signup'))
 	name = session['name']
 	phone = session['phone']
+	school = session['school']
 	form = VerifyForm()
 	error = None
 	if phone_exists(phone):
@@ -169,8 +174,8 @@ def verify():
 									(phone,),
 								)
 							db.execute(
-								'INSERT INTO user (username, phone) VALUES (?, ?)',
-								(name, phone),
+								'INSERT INTO user (username, phone, school) VALUES (?, ?, ?)',
+								(name, phone, school),
 							)
 							db.commit()		
 							try:
