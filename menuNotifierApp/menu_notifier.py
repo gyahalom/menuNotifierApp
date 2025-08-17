@@ -6,16 +6,27 @@ from .db import get_db
 from .twilio import send_text
 
 MENU_ID = {
-	'BREAKFAST': {
-		'id': '6136d437534a13f81e174a81',
-		'long': False,
+	'McAuliffe': {
+		'BREAKFAST': {
+			'id': '6136d437534a13f81e174a81',
+			'long': False,
+		},
+		'LUNCH': {
+			'id': '671fda48e96f1e3ea01554f7',
+			'long': True,
+		},
 	},
-	'LUNCH': {
-		'id': '55a02d4deabc88225e8b473f',
-		'long': True,
+	'CUSD': {
+		'BREAKFAST': {
+			'id': '6136d437534a13f81e174a81',
+			'long': False,
+		},
+		'LUNCH': {
+			'id': '55a02d4deabc88225e8b473f',
+			'long': True,
+		},
 	},
 }
-SCHOOL = 'McAuliffe'
 MENU_ID_URL = 'https://www.schoolnutritionandfitness.com/webmenus2/api/menutypeController.php/show'
 MENU_ITEM_URL = 'https://api.isitesoftware.com/graphql'
 base = os.path.dirname(os.path.realpath(__file__))
@@ -70,7 +81,8 @@ def get_menu_items(menu_id: str, day: Optional[int]=None) -> Iterable[dict]:
 	if (items is None) or ('data' not in items):
 		raise ValueError('No menu item data retrieved')
 	options = [x['product'] for x in items['data']['menu']['items'] if 
-							x['day'] == day and x['product']['category'] != 'Ancillary']
+							x['day'] == day and x['product']['category'] != 'Ancillary'
+							and x['product']['name'] != 'None']
 	return options
 
 def get_item_details(item_id: str) -> dict:
@@ -112,35 +124,37 @@ def send_messages(date: datetime=None, msg=None):
 		if date is None:
 			date = datetime.now() + timedelta(days=1)
 		date_str = custom_strftime('%A, %B {S}, %Y', date)
-		msg = []
 
 		meals = ['Breakfast', 'Lunch']
-		for meal in meals:
-			try:			
-				meal_msg = gen_message(MENU_ID[meal.upper()], date=date)
-			except:
-				meal_msg = None
-			if meal_msg:
-				prefix = f'{meal} option'
-				prefix += 's are:' if len(meal_msg) > 1 else ' is:'
-				msg.append(prefix)
-				msg.extend(meal_msg)
-				msg.append('')
-		if msg:		
-			msg = [f'{SCHOOL} meal options for {date_str}', ''] + msg + ['Have a nice day!']
-	elif isinstance(msg, str):
-		if os.path.isfile(msg):
-			with open(msg) as f:
-				msg = f.read().splitlines()
-		else:
-			msg = msg.splitlines()
+		for school in MENU_ID.keys():
+			msg = []
+			for meal in meals:
+				try:			
+					meal_msg = gen_message(MENU_ID[school][meal.upper()], date=date)
+				except:
+					meal_msg = None
+					print('Something went wrong')
+				if meal_msg:
+					prefix = f'{meal} option'
+					prefix += 's are:' if len(meal_msg) > 1 else ' is:'
+					msg.append(prefix)
+					msg.extend(meal_msg)
+					msg.append('')
+			if msg:		
+				msg = [f'{school} meal options for {date_str}', ''] + msg + ['Have a nice day!']
+			elif isinstance(msg, str):
+				if os.path.isfile(msg):
+					with open(msg) as f:
+						msg = f.read().splitlines()
+				else:
+					msg = msg.splitlines()
 
-	if msg:	
-		msg = list(msg)	
-		db = get_db()
-		users = db.execute('SELECT * FROM user').fetchall()
-		msg.insert(0, '')
-		for person in users:
-			msg[0] = f"\n{greet()} {person['username']},"
-			send_text(phone=person['phone'], body='\n'.join(msg))
+			if msg:	
+				msg = list(msg)	
+				db = get_db()
+				users = db.execute(f"SELECT * FROM user WHERE school='{school}'").fetchall()
+				msg.insert(0, '')
+				for person in users:
+					msg[0] = f"\n{greet()} {person['username']},"
+					send_text(phone=person['phone'], body='\n'.join(msg))
 	
