@@ -202,7 +202,7 @@ def create_app(test_config=None):
 		try:
 			with app.app_context():
 				app.logger.info('Sending messages manually')
-				send_messages(msg=msg)
+				send_messages(user_message=msg)
 				click.echo('Messages sent')
 		except:
 			app.logger.exception('Failed to send messages')
