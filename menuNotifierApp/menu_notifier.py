@@ -131,9 +131,10 @@ def send_messages(date: datetime=None, msg=None):
 			for meal in meals:
 				try:			
 					meal_msg = gen_message(MENU_ID[school][meal.upper()], date=date)
-				except:
+				except Exception as ex:
 					meal_msg = None
 					print('Something went wrong')
+					print(ex)
 				if meal_msg:
 					prefix = f'{meal} option'
 					prefix += 's are:' if len(meal_msg) > 1 else ' is:'
