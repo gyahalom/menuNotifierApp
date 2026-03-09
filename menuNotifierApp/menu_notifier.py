@@ -120,13 +120,13 @@ def gen_message(meal: dict, date: Optional[datetime]=None) -> str:
 	return msg
 
 def send_messages(date: datetime=None, msg=None):
-	if msg is None:
-		if date is None:
-			date = datetime.now() + timedelta(days=1)
-		date_str = custom_strftime('%A, %B {S}, %Y', date)
-
-		meals = ['Breakfast', 'Lunch']
-		for school in MENU_ID.keys():
+	if date is None:
+		date = datetime.now() + timedelta(days=1)
+	date_str = custom_strftime('%A, %B {S}, %Y', date)
+	meals = ['Breakfast', 'Lunch']
+	
+	for school in MENU_ID.keys():
+		if msg is None:
 			msg = []
 			for meal in meals:
 				try:			
@@ -143,19 +143,17 @@ def send_messages(date: datetime=None, msg=None):
 					msg.append('')
 			if msg:		
 				msg = [f'{school} meal options for {date_str}', ''] + msg + ['Have a nice day!']
-			elif isinstance(msg, str):
-				if os.path.isfile(msg):
+		elif isinstance(msg, str):
+			if os.path.isfile(msg):
 					with open(msg) as f:
-						msg = f.read().splitlines()
-				else:
-					msg = msg.splitlines()
-
-			if msg:	
-				msg = list(msg)	
-				db = get_db()
-				users = db.execute(f"SELECT * FROM user WHERE school='{school}'").fetchall()
-				msg.insert(0, '')
-				for person in users:
-					msg[0] = f"\n{greet()} {person['username']},"
-					send_text(phone=person['phone'], body='\n'.join(msg))
+							msg = f.read().splitlines()
+			else:
+					msg = msg.splitlines()	
+		if msg:	
+			db = get_db()
+			users = db.execute(f"SELECT * FROM user WHERE school='{school}'").fetchall()
+			msg.insert(0, '')
+			for person in users:
+				msg[0] = f"\n{greet()} {person['username']},"
+				send_text(phone=person['phone'], body='\n'.join(msg))
 	
