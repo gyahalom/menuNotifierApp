@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import os
 import requests
+import time
 from typing import Iterable, Optional
 from .db import get_db
 from .twilio import send_text
@@ -30,6 +31,14 @@ MENU_ID = {
 MENU_ID_URL = 'https://www.schoolnutritionandfitness.com/webmenus2/api/menutypeController.php/show'
 MENU_ITEM_URL = 'https://api.isitesoftware.com/graphql'
 base = os.path.dirname(os.path.realpath(__file__))
+# Avoid being flagged as bot
+# Define browser-like headers
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Referer': 'https://google.com'
+}
 PROXIES = None
 PROXY = os.getenv('MENU_NOTIFIER_PROXY')
 PROXY_AUTH = os.getenv('MENU_NOTIFIER_PROXY_AUTH')
@@ -65,7 +74,7 @@ def get_menu_id(meal_id: str,
 	month = month or today.month
 	year = year or today.year
 	payload = {'_id': meal_id}
-	r = requests.get(MENU_ID_URL, params=payload, proxies=PROXIES)
+	r = requests.get(MENU_ID_URL, params=payload, headers=HEADERS, proxies=PROXIES)
 	r.raise_for_status()
 	menus = r.json()
 	if (menus is None) or ('menus' not in menus):
@@ -83,7 +92,7 @@ def get_menu_items(menu_id: str, day: Optional[int]=None) -> Iterable[dict]:
 	query = ('{menu(id:"' + menu_id + '") {id month year items{day product{id ' +
 						'name long_description category}}}}')
 	payload = {'query': query}
-	r = requests.get(MENU_ITEM_URL, params=payload, proxies=PROXIES)
+	r = requests.get(MENU_ITEM_URL, params=payload, headers=HEADERS, proxies=PROXIES)
 	r.raise_for_status()
 	items = r.json()
 	if (items is None) or ('data' not in items):
@@ -96,7 +105,7 @@ def get_menu_items(menu_id: str, day: Optional[int]=None) -> Iterable[dict]:
 def get_item_details(item_id: str) -> dict:
 	query = '{product(id:"' + item_id + '") {id name image_url1 long_description}}'
 	payload = {'query': query}
-	r = requests.get(MENU_ITEM_URL, params=payload, proxies=PROXIES)
+	r = requests.get(MENU_ITEM_URL, params=payload, headers=HEADERS, proxies=PROXIES)
 	r.raise_for_status()
 	item = r.json()
 	if (item is None) or ('data' not in item):
@@ -139,6 +148,8 @@ def send_messages(date: Optional[datetime]=None, user_message: Optional[str]=Non
 			for meal in meals:
 				try:			
 					meal_msg = gen_message(MENU_ID[school][meal.upper()], date=date)
+					# Add delay to avoid flagging as bot
+					time.sleep(1)
 				except Exception as ex:
 					meal_msg = None
 					print('Something went wrong')
