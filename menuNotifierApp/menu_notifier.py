@@ -30,6 +30,14 @@ MENU_ID = {
 MENU_ID_URL = 'https://www.schoolnutritionandfitness.com/webmenus2/api/menutypeController.php/show'
 MENU_ITEM_URL = 'https://api.isitesoftware.com/graphql'
 base = os.path.dirname(os.path.realpath(__file__))
+PROXIES = None
+PROXY = os.getenv('MENU_NOTIFIER_PROXY')
+PROXY_AUTH = os.getenv('MENU_NOTIFIER_PROXY_AUTH')
+if PROXY is not None and PROXY_AUTH is not None:
+	PROXIES = {
+		'http': f'http://{PROXY_AUTH}@{PROXY}',
+		'https': f'http://{PROXY_AUTH}@{PROXY}'
+	}
 
 def suffix(d: int) -> str:
 	return 'th' if 11 <= d <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(d % 10, 'th')
@@ -57,7 +65,7 @@ def get_menu_id(meal_id: str,
 	month = month or today.month
 	year = year or today.year
 	payload = {'_id': meal_id}
-	r = requests.get(MENU_ID_URL, params=payload)
+	r = requests.get(MENU_ID_URL, params=payload, proxies=PROXIES)
 	r.raise_for_status()
 	menus = r.json()
 	if (menus is None) or ('menus' not in menus):
@@ -75,7 +83,7 @@ def get_menu_items(menu_id: str, day: Optional[int]=None) -> Iterable[dict]:
 	query = ('{menu(id:"' + menu_id + '") {id month year items{day product{id ' +
 						'name long_description category}}}}')
 	payload = {'query': query}
-	r = requests.get(MENU_ITEM_URL, params=payload)
+	r = requests.get(MENU_ITEM_URL, params=payload, proxies=PROXIES)
 	r.raise_for_status()
 	items = r.json()
 	if (items is None) or ('data' not in items):
@@ -88,7 +96,7 @@ def get_menu_items(menu_id: str, day: Optional[int]=None) -> Iterable[dict]:
 def get_item_details(item_id: str) -> dict:
 	query = '{product(id:"' + item_id + '") {id name image_url1 long_description}}'
 	payload = {'query': query}
-	r = requests.get(MENU_ITEM_URL, params=payload)
+	r = requests.get(MENU_ITEM_URL, params=payload, proxies=PROXIES)
 	r.raise_for_status()
 	item = r.json()
 	if (item is None) or ('data' not in item):
